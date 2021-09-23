@@ -36,9 +36,9 @@ int main(void)
 	{
 		for(uint32_t i = 0;i<32;i++)
 		{
-			if(sos & (1<<(31-i))){GPIOA->BSRR = (1<<5);}
-			else{GPIOA->BRR = (1<<5);};
+			if(sos & (1U<<(31-i))){GPIOA->BSRR = (1<<5);}
+			else{GPIOA->BRR = (1<<5);}
 			for (volatile uint32_t i=0; i<10000;i++){}
 		}
-	};
+	}
 }

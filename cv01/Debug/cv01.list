@@ -123,7 +123,7 @@ int main(void)
  8000134:	60fb      	str	r3, [r7, #12]
  8000136:	e01d      	b.n	8000174 <main+0x6c>
 		{
-			if(sos & (1<<(31-i))){GPIOA->BSRR = (1<<5);}
+			if(sos & (1U<<(31-i))){GPIOA->BSRR = (1<<5);}
  8000138:	2380      	movs	r3, #128	; 0x80
  800013a:	061a      	lsls	r2, r3, #24
  800013c:	68fb      	ldr	r3, [r7, #12]
@@ -137,7 +137,7 @@ int main(void)
  800014c:	2220      	movs	r2, #32
  800014e:	619a      	str	r2, [r3, #24]
  8000150:	e003      	b.n	800015a <main+0x52>
-			else{GPIOA->BRR = (1<<5);};
+			else{GPIOA->BRR = (1<<5);}
  8000152:	2390      	movs	r3, #144	; 0x90
  8000154:	05db      	lsls	r3, r3, #23
  8000156:	2220      	movs	r2, #32
