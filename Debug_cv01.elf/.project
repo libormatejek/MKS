@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Debug_cv01.elf</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.cdt.core.cnature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>cv01.elf</name>
+			<type>1</type>
+			<location>D:/Documents/MKS/cv02/Debug/cv01.elf</location>
+		</link>
+	</linkedResources>
+</projectDescription>
