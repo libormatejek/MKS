@@ -53,31 +53,51 @@ void blikac(void)
 void tlacitka(void)
 {
 
+	static uint16_t debounce = 0xFFFF;
+
 	static uint32_t old_s2;
 	static uint32_t old_s1;
 
 	static uint32_t off_time;
+	static uint32_t shift_time;
 	static uint32_t LED_TIME_SHORT = 100;
 	static uint32_t LED_TIME_LONG = 1000;
+	static uint32_t TIME_5MS = 5;
 
+
+
+	if(Tick>shift_time+TIME_5MS)
+	{
+		debounce<<=1;
+		if (GPIOC->IDR & (1<<1)) debounce |= 0x0001;
+		if (debounce ==0x7FFF){
+			 GPIOB->BSRR = (1<<0);
+			 off_time = Tick + LED_TIME_LONG;
+		}
+		shift_time=Tick;
+	}
+/*
 	 uint32_t new_s2 = GPIOC->IDR & (1<<0);
-	 if (old_s2 && !new_s2) { // falling edge
+	 if (old_s2 && !new_s2)
+	 { // falling edge
 	 off_time = Tick + LED_TIME_SHORT;
 	 GPIOB->BSRR = (1<<0);
 	 }
 	 old_s2 = new_s2;
 
 	 uint32_t new_s1 = GPIOC->IDR & (1<<1);
-	 if (old_s1 && !new_s1) { // falling edge
+	 if (old_s1 && !new_s1)
+	 { // falling edge
 	 off_time = Tick + LED_TIME_LONG;
 	 GPIOB->BSRR = (1<<0);
 	 }
 	 old_s1 = new_s1;
 
-
-	 if (Tick > off_time) {
+*/
+	 if (Tick > off_time)
+	 {
 	  GPIOB->BRR = (1<<0);
-	  }
+	 }
 
 }
 
@@ -97,7 +117,7 @@ int main(void)
 
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
-	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PC; // select PC0 for EXTI0
+	//SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PC; // select PC0 for EXTI0
 	//EXTI->IMR |= EXTI_IMR_MR0; // mask
 	//EXTI->FTSR |= EXTI_FTSR_TR0; // trigger on falling edge
 	//NVIC_EnableIRQ(EXTI0_1_IRQn); // enable EXTI0_1
