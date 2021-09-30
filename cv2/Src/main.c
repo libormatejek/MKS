@@ -24,6 +24,31 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+void EXTI0_1_IRQHandler(void)
+	 {
+	 if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
+	 EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
+	 GPIOB->ODR ^= (1<<0); // toggle
+	 }
+	 }
+
+volatile uint32_t Tick;
+void SysTick_Handler(void)
+ {
+ Tick++;
+ }
+
+
+void blikac(void)
+ {
+ static uint32_t LED_TIME_BLINK = 300;
+ static uint32_t delay;
+
+ if (Tick > delay + LED_TIME_BLINK) {
+ GPIOA->ODR ^= (1<<4);
+ delay = Tick;
+ }
+ }
 
 
 
@@ -45,35 +70,13 @@ int main(void)
 	EXTI->IMR |= EXTI_IMR_MR0; // mask
 	EXTI->FTSR |= EXTI_FTSR_TR0; // trigger on falling edge
 	NVIC_EnableIRQ(EXTI0_1_IRQn); // enable EXTI0_1
-//test
 
     /* Loop forever */
-	while(1){};
+	while(1){
+		blikac();
+	};
 }
 
-void EXTI0_1_IRQHandler(void)
-	 {
-	 if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
-	 EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
-	 GPIOB->ODR ^= (1<<0); // toggle
-	 }
-	 }
 
-volatile uint32_t Tick;
-void SysTick_Handler(void)
- {
- Tick++;
- }
-
-uint32_t LED_TIME_SHORT = 300;
-void blikac(void)
- {
- static uint32_t delay;
-
- if (Tick > delay + LED_TIME_BLINK) {
- GPIOA->ODR ^= (1<<4);
- delay = Tick;
- }
- }
 
 
