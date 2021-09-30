@@ -19,85 +19,80 @@
 
 #include <stdint.h>
 #include "stm32f0xx.h"
+#define LED_TIME_SHORT 100
+#define LED_TIME_LONG 1000
+#define TIME_5MS 5
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+volatile uint32_t Tick;
+
 void EXTI0_1_IRQHandler(void)
 {
-	 if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
-	 EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
-	 GPIOB->ODR ^= (1<<0); // toggle
-	 }
+	if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
+		EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
+		GPIOB->ODR ^= (1<<0); // toggle
+	}
 }
 
-volatile uint32_t Tick;
 void SysTick_Handler(void)
 {
 	 Tick++;
 }
 
-
 void blikac(void)
 {
-	 static uint32_t LED_TIME_BLINK = 300;
-	 static uint32_t delay;
+	static uint32_t LED_TIME_BLINK = 300;
+	static uint32_t delay;
 
-	 if (Tick > delay + LED_TIME_BLINK) {
-	 GPIOA->ODR ^= (1<<4);
-	 delay = Tick;
-	 }
+	if (Tick > delay + LED_TIME_BLINK) {
+		GPIOA->ODR ^= (1<<4);
+		delay = Tick;
+	}
 }
 
 void tlacitka(void)
 {
-
 	static uint16_t debounce = 0xFFFF;
-
 	static uint32_t old_s2;
 	static uint32_t old_s1;
-
 	static uint32_t off_time;
 	static uint32_t shift_time;
-	static uint32_t LED_TIME_SHORT = 100;
-	static uint32_t LED_TIME_LONG = 1000;
-	static uint32_t TIME_5MS = 5;
-
 
 
 	if(Tick>shift_time+TIME_5MS)
 	{
 		debounce<<=1;
-		if (GPIOC->IDR & (1<<1)) debounce |= 0x0001;
+		if (GPIOC->IDR & (1<<1)){
+			debounce |= 0x0001;
+		}
 		if (debounce ==0x7FFF){
-			 GPIOB->BSRR = (1<<0);
-			 off_time = Tick + LED_TIME_LONG;
+			GPIOB->BSRR = (1<<0);
+			off_time = Tick + LED_TIME_LONG;
 		}
 		shift_time=Tick;
 	}
-/*
+	/*
 	 uint32_t new_s2 = GPIOC->IDR & (1<<0);
-	 if (old_s2 && !new_s2)
-	 { // falling edge
+	 if (old_s2 && !new_s2){ // falling edge
 	 off_time = Tick + LED_TIME_SHORT;
 	 GPIOB->BSRR = (1<<0);
 	 }
 	 old_s2 = new_s2;
 
 	 uint32_t new_s1 = GPIOC->IDR & (1<<1);
-	 if (old_s1 && !new_s1)
-	 { // falling edge
+	 if (old_s1 && !new_s1){ // falling edge
 	 off_time = Tick + LED_TIME_LONG;
 	 GPIOB->BSRR = (1<<0);
 	 }
 	 old_s1 = new_s1;
 
-*/
-	 if (Tick > off_time)
-	 {
-	  GPIOB->BRR = (1<<0);
-	 }
+	 */
+	if (Tick > off_time){
+		GPIOB->BRR = (1<<0);
+	}
 
 }
 
@@ -126,7 +121,7 @@ int main(void)
 	while(1){
 		blikac();
 		tlacitka();
-	};
+	}
 }
 
 
