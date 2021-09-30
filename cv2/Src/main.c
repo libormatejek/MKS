@@ -26,8 +26,11 @@
 
 
 
+
+
 int main(void)
 {
+	SysTick_Config(8000);
 
 
 	RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; // enable
@@ -42,7 +45,7 @@ int main(void)
 	EXTI->IMR |= EXTI_IMR_MR0; // mask
 	EXTI->FTSR |= EXTI_FTSR_TR0; // trigger on falling edge
 	NVIC_EnableIRQ(EXTI0_1_IRQn); // enable EXTI0_1
-
+//test
 
     /* Loop forever */
 	while(1){};
@@ -52,6 +55,25 @@ void EXTI0_1_IRQHandler(void)
 	 {
 	 if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
 	 EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
-	 GPIOA->ODR ^= (1<<4); // toggle
+	 GPIOB->ODR ^= (1<<0); // toggle
 	 }
 	 }
+
+volatile uint32_t Tick;
+void SysTick_Handler(void)
+ {
+ Tick++;
+ }
+
+uint32_t LED_TIME_SHORT = 300;
+void blikac(void)
+ {
+ static uint32_t delay;
+
+ if (Tick > delay + LED_TIME_BLINK) {
+ GPIOA->ODR ^= (1<<4);
+ delay = Tick;
+ }
+ }
+
+
