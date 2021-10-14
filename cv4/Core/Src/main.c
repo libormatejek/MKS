@@ -64,44 +64,46 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 	if(channel==1){
 		raw_temp = HAL_ADC_GetValue(hadc);
-
-
 	}
 
 	if(channel==2){
 		raw_volt = HAL_ADC_GetValue(hadc);
-
 	}
 
 	if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS)) channel = 0;
 	else channel++;
-
-
-	//raw_pot = HAL_ADC_GetValue(hadc);
 }
 
 void prepinac(uint32_t voltage, int32_t temperature, uint16_t pot, uint8_t led){
 
-
+	static uint32_t time;
+	static uint32_t new_time;
 	static enum { SHOW_POT, SHOW_VOLT, SHOW_TEMP } state = SHOW_POT;
 
 	if (HAL_GPIO_ReadPin(S1_GPIO_Port,S1_Pin)!=1){
 		state = SHOW_VOLT;
+		time=HAL_GetTick();
 	}
 
 	if (HAL_GPIO_ReadPin(S2_GPIO_Port,S2_Pin)!=1){
 		state = SHOW_TEMP;
+		time=HAL_GetTick();
 	}
 
 	if (state == SHOW_VOLT) {
 		sct_value(voltage,8);
-		HAL_Delay(100);
-		state = SHOW_POT;
+		new_time=HAL_GetTick();
+		if (time+1000<new_time){
+			state = SHOW_POT;
+		}
+
 	}
 	else if (state == SHOW_TEMP) {
 		sct_value(temperature,8);
-		HAL_Delay(100);
-		state = SHOW_POT;
+		new_time=HAL_GetTick();
+		if (time+1000<new_time){
+			state = SHOW_POT;
+		}
 	}
 	else if (state == SHOW_POT) {
 		sct_value(pot,led);
@@ -181,24 +183,16 @@ int main(void)
 	  uint16_t pot;
 	  uint8_t led;
 	  uint32_t voltage = 330 * (*VREFINT_CAL_ADDR) / raw_volt;
-
 	  int32_t temperature = (raw_temp - (int32_t)(*TEMP30_CAL_ADDR));
 
 	  temperature = temperature * (int32_t)(110 - 30);
 	  temperature = temperature / (int32_t)(*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);
 	  temperature = temperature + 30;
-
 	  pot=(raw_pot*500) / 4096;
 	  led=(raw_pot*9) / 4096;
-
 	  prepinac(voltage,temperature,pot,led);
 
-
-
-
 	  HAL_Delay(50);
-
-
 
     /* USER CODE END WHILE */
 
