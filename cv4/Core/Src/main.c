@@ -80,12 +80,12 @@ void prepinac(uint32_t voltage, int32_t temperature, uint16_t pot, uint8_t led){
 	static uint32_t new_time;
 	static enum { SHOW_POT, SHOW_VOLT, SHOW_TEMP } state = SHOW_POT;
 
-	if (HAL_GPIO_ReadPin(S1_GPIO_Port,S1_Pin)!=1){
+	if (HAL_GPIO_ReadPin(S1_GPIO_Port,S1_Pin)==0){
 		state = SHOW_VOLT;
 		time=HAL_GetTick();
 	}
 
-	if (HAL_GPIO_ReadPin(S2_GPIO_Port,S2_Pin)!=1){
+	if (HAL_GPIO_ReadPin(S2_GPIO_Port,S2_Pin)==0){
 		state = SHOW_TEMP;
 		time=HAL_GetTick();
 	}
