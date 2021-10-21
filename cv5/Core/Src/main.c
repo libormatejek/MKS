@@ -144,6 +144,8 @@ static void uart_process_command(char *cmd)
 
 	else if (strcasecmp(token, "DUMP") == 0) {
 
+		//nahrat 16 bajtů a dale pracovat s vystupem HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, i, I2C_MEMADD_SIZE_16BIT, &value, 16, 1000);
+
 		for(uint32_t i = 0;i<16;i++){
 
 			HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, i, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000);
