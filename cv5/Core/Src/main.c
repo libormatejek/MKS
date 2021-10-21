@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
+#include "stdlib.h"
 
 
 /* USER CODE END Includes */
@@ -32,11 +33,13 @@
 /* USER CODE BEGIN PTD */
 
 #define RX_BUFFER_LEN 64
+#define EEPROM_ADDR 0b10100000
 #define CMD_BUFFER_LEN 256
 static uint8_t uart_rx_buf[RX_BUFFER_LEN];
 static volatile uint16_t uart_rx_read_ptr = 0;
 
 #define uart_rx_write_ptr (RX_BUFFER_LEN - hdma_usart2_rx.Instance->CNDTR)
+int atoi(const char *str);
 
 /* USER CODE END PTD */
 
@@ -50,6 +53,8 @@ static volatile uint16_t uart_rx_read_ptr = 0;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 
@@ -62,6 +67,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -80,8 +86,11 @@ int _write(int file, char const *buf, int n)
 static void uart_process_command(char *cmd)
 {
 	printf("prijato: '%s'\n", cmd);
-
+	uint8_t value;
 	char *token;
+	uint16_t addr;
+
+
 	token = strtok(cmd, " ");
 	if (strcasecmp(token, "HELLO") == 0) {
 	 printf("Komunikace OK\n");
@@ -100,29 +109,55 @@ static void uart_process_command(char *cmd)
 		 printf("OK\n");
 	}
 	else if (strcasecmp(token, "STATUS") == 0) {
-			 token = strtok(NULL, " ");
-			 if (strcasecmp(token, "LED1") == 0){
-				 if (HAL_GPIO_ReadPin(PA4_GPIO_Port,PA4_Pin)){printf("on\n");} else {printf("off\n");}
-			 }
-			 else if (strcasecmp(token, "LED2") == 0){
-			 				 if (HAL_GPIO_ReadPin(PB0_GPIO_Port,PB0_Pin)){printf("on\n");} else {printf("off\n");}
-			 			 }
-			 printf("OK\n");
+		token = strtok(NULL, " ");
+		if (strcasecmp(token, "LED1") == 0){
+			if (HAL_GPIO_ReadPin(PA4_GPIO_Port,PA4_Pin)){printf("on\n");} else {printf("off\n");}
+		}
+		else if (strcasecmp(token, "LED2") == 0){
+			if (HAL_GPIO_ReadPin(PB0_GPIO_Port,PB0_Pin)){printf("on\n");} else {printf("off\n");}
+		}
+		printf("OK\n");
 		}
 
+	else if (strcasecmp(token, "READ") == 0) {
+		token = strtok(NULL, " ");
+		addr=atoi(token);
+		printf(token);
+		HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, addr, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000);
+		printf("adresa: 0x%04x ", addr);
+		printf("= 0x%02x\n", value);
 
-	/*
-	else if (strcasecmp(token, "LED2") == 0) {
-		 token = strtok(NULL, " ");
-		 if (strcasecmp(token, "ON") == 0) ...
-		 else if (strcasecmp(token, "OFF") ...
-		 		 printf("OK\n");
-	*/
+	}
+
+
+	else if (strcasecmp(token, "WRITE") == 0) {
+		token = strtok(NULL, " ");
+		addr=atoi(token);
+		token = strtok(NULL, " ");
+		value=atoi(token);
+		printf("%s",token);
+		HAL_I2C_Mem_Write(&hi2c1, EEPROM_ADDR, addr, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000);
+		printf("adresa: 0x%04x ", addr);
+		printf("= 0x'%02x'\n", value);
+		while (HAL_I2C_IsDeviceReady(&hi2c1, EEPROM_ADDR, 300, 1000) == HAL_TIMEOUT) {}
+		}
+
+	else if (strcasecmp(token, "DUMP") == 0) {
+
+		for(uint32_t i = 0;i<16;i++){
+
+			HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, i, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000);
+			printf("0x%02x ", value);
+			if((i%8)==7){
+				printf("\n");
+			}
+		}
+
+	}
+
 
 
 }
-
-
 
 static void uart_byte_available(uint8_t c)
 {
@@ -174,6 +209,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_UART_Receive_DMA(&huart2, uart_rx_buf, RX_BUFFER_LEN);
@@ -209,6 +245,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -236,6 +273,58 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x2000090E;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
