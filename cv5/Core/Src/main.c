@@ -19,11 +19,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "string.h"
 
 
 /* USER CODE END Includes */
@@ -60,8 +60,8 @@ DMA_HandleTypeDef hdma_usart2_rx;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
 static void MX_DMA_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -80,6 +80,45 @@ int _write(int file, char const *buf, int n)
 static void uart_process_command(char *cmd)
 {
 	printf("prijato: '%s'\n", cmd);
+
+	char *token;
+	token = strtok(cmd, " ");
+	if (strcasecmp(token, "HELLO") == 0) {
+	 printf("Komunikace OK\n");
+	}
+	else if (strcasecmp(token, "LED1") == 0) {
+	 token = strtok(NULL, " ");
+	 if (strcasecmp(token, "ON") == 0){HAL_GPIO_WritePin(PA4_GPIO_Port,PA4_Pin,GPIO_PIN_SET);printf("test_led1\n");}
+
+	 else if (strcasecmp(token, "OFF")==0){HAL_GPIO_WritePin(PA4_GPIO_Port,PA4_Pin,GPIO_PIN_RESET);}
+	 printf("OK\n");
+	}
+	else if (strcasecmp(token, "LED2") == 0) {
+		 token = strtok(NULL, " ");
+		 if (strcasecmp(token, "ON") == 0){ HAL_GPIO_WritePin(PB0_GPIO_Port,PB0_Pin,GPIO_PIN_SET);printf("test_led2\n");}
+		 else if (strcasecmp(token, "OFF")==0){ HAL_GPIO_WritePin(PB0_GPIO_Port,PB0_Pin,GPIO_PIN_RESET);}
+		 printf("OK\n");
+	}
+	else if (strcasecmp(token, "STATUS") == 0) {
+			 token = strtok(NULL, " ");
+			 if (strcasecmp(token, "LED1") == 0){
+				 if (HAL_GPIO_ReadPin(PA4_GPIO_Port,PA4_Pin)){printf("on\n");} else {printf("off\n");}
+			 }
+			 else if (strcasecmp(token, "LED2") == 0){
+			 				 if (HAL_GPIO_ReadPin(PB0_GPIO_Port,PB0_Pin)){printf("on\n");} else {printf("off\n");}
+			 			 }
+			 printf("OK\n");
+		}
+
+
+	/*
+	else if (strcasecmp(token, "LED2") == 0) {
+		 token = strtok(NULL, " ");
+		 if (strcasecmp(token, "ON") == 0) ...
+		 else if (strcasecmp(token, "OFF") ...
+		 		 printf("OK\n");
+	*/
+
 
 }
 
@@ -110,7 +149,7 @@ static void uart_byte_available(uint8_t c)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t c;
+	//uint8_t c;
 
 
   /* USER CODE END 1 */
@@ -133,8 +172,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
   MX_DMA_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_UART_Receive_DMA(&huart2, uart_rx_buf, RX_BUFFER_LEN);
@@ -148,8 +187,6 @@ int main(void)
 
 	  //HAL_UART_Receive(&huart2, &c, 1, HAL_MAX_DELAY);
 	  //HAL_UART_Transmit(&huart2, &c, 1, HAL_MAX_DELAY);
-	  HAL_Delay(100);
-
 	  while (uart_rx_read_ptr != uart_rx_write_ptr) {
 	   uint8_t b = uart_rx_buf[uart_rx_read_ptr];
 	   if (++uart_rx_read_ptr >= RX_BUFFER_LEN) uart_rx_read_ptr = 0; // increase read pointer
@@ -265,9 +302,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, PA4_Pin|LD2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(PB0_GPIO_Port, PB0_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -275,12 +316,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pins : PA4_Pin LD2_Pin */
+  GPIO_InitStruct.Pin = PA4_Pin|LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB0_Pin */
+  GPIO_InitStruct.Pin = PB0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(PB0_GPIO_Port, &GPIO_InitStruct);
 
 }
 
