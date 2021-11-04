@@ -73,8 +73,8 @@ void sct_led(uint32_t value){
 
 	}
 
-	sct_nla(0);
 	sct_nla(1);
+	sct_nla(0);
 
 }
 

@@ -37,10 +37,68 @@ static int16_t lookup [] ={1689,1669,1649,1630,1611,1593,1575,1558,1540,1524,150
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+int16_t temp_18b20;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+
+void prepinac(int16_t temp_ntc){
+
+	static uint32_t time;
+	static uint32_t new_time;
+	int16_t temp_ds;
+	static enum { SHOW_NTC, SHOW_DS } state = SHOW_NTC;
+
+
+	if(time>new_time+750){
+		OWReadTemperature(&temp_18b20);
+		OWConvertAll();
+		temp_ds=temp_18b20;
+
+	}
+
+
+
+	if (HAL_GPIO_ReadPin(S0_GPIO_Port,S0_Pin)==0){
+		state =  SHOW_NTC;
+		time=HAL_GetTick();
+	}
+
+	if (HAL_GPIO_ReadPin(S1_GPIO_Port,S1_Pin)==0){
+		state = SHOW_DS;
+		time=HAL_GetTick();
+	}
+
+	if (state == SHOW_NTC) {
+
+		sct_value(temp_ntc);
+		new_time=HAL_GetTick();
+		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
+		if (time+1000<new_time){
+			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
+				}
+
+
+	}
+	else if (state == SHOW_DS) {
+		sct_value(temp_ds/10);
+		new_time=HAL_GetTick();
+		HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+		if (time+1000<new_time){
+				HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+					}
+
+
+	}
+}
+
+
+
+
+
 
 /* USER CODE END PM */
 
@@ -99,7 +157,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC_Init();
   /* USER CODE BEGIN 2 */
-  int16_t temp_18b20;
+
 
   sct_init();
   OWInit();
@@ -114,16 +172,26 @@ int main(void)
   {
 
 
-	  OWConvertAll();
-	      HAL_Delay(CONVERT_T_DELAY);
-	      //OWReadTemperature();
 
+	  prepinac(lookup[HAL_ADC_GetValue(&hadc)]);
+
+
+	  /*
+	  HAL_Delay(CONVERT_T_DELAY);
+	  if (HAL_GPIO_ReadPin(S0_GPIO_Port,S0_Pin)==0){
 	      	if (OWReadTemperature(&temp_18b20)){
-	      		//sct_value(temp_18b20/10);
-
+	      		sct_value(temp_18b20/10);
+	      		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
 	      	}
+	  }
+	   if (HAL_GPIO_ReadPin(S1_GPIO_Port,S1_Pin)==0){
+		   sct_value(lookup[HAL_ADC_GetValue(&hadc)]);
+		   HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+	   	   }
 
-	 sct_value(lookup[HAL_ADC_GetValue(&hadc)]);
+*/
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
