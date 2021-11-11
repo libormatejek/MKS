@@ -35,9 +35,6 @@
 /* USER CODE BEGIN PTD */
 
 
-
-
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -110,9 +107,6 @@ void StartAcceleroTask(void const * argument);
 /* USER CODE BEGIN 0 */
 
 
-
-
-
 /* USER CODE END 0 */
 
 /**
@@ -131,8 +125,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
-
 
 
   /* USER CODE END Init */
@@ -188,11 +180,6 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
 
-
-
-
-
-
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -204,9 +191,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-
-
 
     /* USER CODE END WHILE */
 
@@ -418,10 +402,6 @@ void StartVisualTask(void const * argument)
 
 	int16_t msg;
 
-
-
-
-
   /* Infinite loop */
 
   for(;;)
@@ -444,8 +424,6 @@ void StartVisualTask(void const * argument)
 
 
 	  }
-
-
 
 
   }
@@ -503,14 +481,14 @@ void StartAcceleroTask(void const * argument)
 	  osDelay(1000);
 	  lis2dw12_fifo_data_level_get(&lis2dw12, &samples);
 	  for (uint8_t i = 0; i < samples; i++) {
-	   // Read acceleration data
-	   lis2dw12_acceleration_raw_get(&lis2dw12, raw_acceleration);
-	   printf("X=%d Y=%d Z=%d\n", raw_acceleration[0], raw_acceleration[1], raw_acceleration[2]);
+		  // Read acceleration data
+		  lis2dw12_acceleration_raw_get(&lis2dw12, raw_acceleration);
+		  printf("X=%d Y=%d Z=%d\n", raw_acceleration[0], raw_acceleration[1], raw_acceleration[2]);
 	  }
 
 
 	  xQueueSend(xVisualQueueHandle, &raw_acceleration[0], 0);
-	  	  osDelay(50);
+	  osDelay(50);
 
 
 	  /*
