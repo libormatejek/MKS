@@ -62,7 +62,6 @@ UART_HandleTypeDef huart3;
 
 static volatile int8_t key=-1;
 static volatile int8_t score=0;
-static volatile uint32_t new_time;
 static int16_t pass [] ={7,9,3,2,12};
 
 /* USER CODE END PV */
@@ -74,14 +73,30 @@ static void MX_USART3_UART_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
-void test(int key,int pass){
+void test(int key){
 	static uint32_t new_time;
+	uint32_t time;
+	static int8_t score=0;
+	time=HAL_GetTick();
 
-	if (key == pass){
+
+	if(time>new_time){
+		new_time=time+3000;
+		score=0;
+	}
+
+	if (key == pass[score]){
 		score++;
-		new_time=HAL_GetTick()+3000;
+		new_time=time+3000;
 	}
 	else{
+		score=0;
+	}
+	printf("%d\n",score);
+
+
+	if(score==5){
+		HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
 		score=0;
 	}
 }
@@ -135,25 +150,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  static uint32_t time;
-	  time=HAL_GetTick();
 	  if (key!=-1){
 		  printf("%d\n",key);
-
-		  test(key, pass[score]);
-		  printf("%d\n",score);
-
+		  test(key);
 		  HAL_Delay(400);
 		  key=-1;
-		  if(score==5){
-			  HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-		  }
-
-	  }
-
-	  if(time>new_time){
-		  new_time=time+3000;
-		  score=0;
 	  }
 
 
